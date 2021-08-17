@@ -361,5 +361,223 @@ switch settings.model
         grid on;
         
         xlabel('Time[s]');
+        
+    case 'Object'
+        for i = 1:size(state_sim,1)
+            pd_op(:,i) = zyx2R(state_sim(i,4:6))*state_sim(i,7:9)';
+            wd_op(:,i) = zyx2R(state_sim(i,4:6))*state_sim(i,10:12)';
+        end
+        % Position plots
+        figure
+        grid on
+        hold on
+        plot(time, p_ref(1:end,1) ,'-','linewidth',2)
+        hold on
+        plot(time,state_sim(1:end,1),'--','linewidth',2)
+        axis([0 time(end) -2 2])
+        legend('ref x', 'output x','Interpreter','latex')
+        xlabel('t [s]','Interpreter','latex');ylabel('x [m]','Interpreter','latex')
+        
+        figure
+        grid on
+        hold on
+        plot(time, p_ref(1:end,2) ,'-','linewidth',2)
+        hold on
+        plot(time,state_sim(1:end,2),'--','linewidth',2)
+        axis([0 time(end) -2 2])
+        legend('ref y', 'output y','Interpreter','latex')
+        xlabel('t [s]','Interpreter','latex');ylabel('y [m]','Interpreter','latex')
+        
+        figure
+        grid on
+        hold on
+        plot(time, p_ref(1:end,3) ,'-','linewidth',2)
+        hold on
+        plot(time,state_sim(1:end,3),'--','linewidth',2)
+        axis([0 time(end) -2 2])
+        legend('ref z', 'output z','Interpreter','latex')
+        xlabel('t [s]','Interpreter','latex');ylabel('z [m]','Interpreter','latex')
+        
+        figure
+        grid on
+        hold on
+        plot3(p_ref(1:end,1),p_ref(1:end,2),p_ref(1:end,3),'-','linewidth',2)
+        hold on
+        plot3(state_sim(1:end,1),state_sim(1:end,2),state_sim(1:end,3),'--','linewidth',2)
+        axis([min(state_sim(1:end,1))-0.5 max(state_sim(1:end,1))+0.5 min(state_sim(1:end,2))-0.5 max(state_sim(1:end,2))+0.5 min(state_sim(1:end,3))-0.5 max(state_sim(1:end,3))+0.5])
+        legend('ref traj', 'output traj','Interpreter','latex')
+        xlabel('x [m]');ylabel('y [m]');zlabel('z [m]')
+        
+        % orientation plots
+        figure
+        grid on
+        hold on
+        subplot(2,2,1)
+        plot(time, o_ref(1:end,1),'-','linewidth',2)
+        hold on
+        plot(time,state_sim(1:end,4),'--','linewidth',2)
+        axis([0 time(end) -2 2])
+        legend('Ref Euler Z', 'Output Euler Z')
+        xlabel('t [s]','Interpreter','latex');ylabel('Euler angle')
+        hold on
+        subplot(2,2,2)
+        plot(time, o_ref(1:end,2),'-','linewidth',2)
+        hold on
+        plot(time,state_sim(1:end,5),'--','linewidth',2)
+        axis([0 time(end) -2 2])
+        legend('Ref Euler Y', 'Output Euler Y')
+        xlabel('t [s]');ylabel('Euler angle')
+        hold on
+        subplot(2,2,3)
+        plot(time, o_ref(1:end,3),'-','linewidth',2)
+        hold on
+        plot(time,state_sim(1:end,6),'--','linewidth',2)
+        axis([0 time(end) -2 2])
+        legend('Ref Euler X', 'Output Euler X')
+        xlabel('t [s]');ylabel('Euler angle')
+
+        % Velocity plots (velocity already rotated so now in W frame)
+        figure
+        grid on
+        hold on
+        subplot(2,2,1)
+        plot(time, pd_ref(1:end,1), '-','linewidth',2)
+        hold on
+        plot(time, pd_op(1,1:end),'--','linewidth',2)
+        axis([0 time(end) -2 2])
+        legend('Ref velocity x', 'Output velocity x')
+        xlabel('t [s]','Interpreter','latex');ylabel('vel $[m/s]$','Interpreter','latex')
+        hold on
+        subplot(2,2,2)
+        plot(time, pd_ref(1:end,2), '-','linewidth',2)
+        hold on
+        plot(time, pd_op(2,1:end),'--','linewidth',2)
+        axis([0 time(end) -2 2])
+        legend('Ref velocity y', 'Output velocity y')
+        xlabel('t [s]');ylabel('vel $[m/s]$','Interpreter','latex')
+        hold on
+        subplot(2,2,3)
+        plot(time, pd_ref(1:end,3), '-','linewidth',2)
+        hold on
+        plot(time, pd_op(3,1:end),'--','linewidth',2)
+        axis([0 time(end) -2 2])
+        legend('Ref velocity z', 'Output velocity z')
+        xlabel('t [s]');ylabel('vel $[m/s]$','Interpreter','latex')
+        
+        % Angular Velocity plots
+        figure
+        grid on
+        hold on
+        subplot(2,2,1)
+        plot(time,w_ref(1,1:end), '-','linewidth',2)
+        hold on
+        plot(time,wd_op(1,1:end),'--','linewidth',2)
+        axis([0 time(end) -2 2])
+        legend('Ref ang velocity z', 'Output ang velocity z')
+        xlabel('t [s]','Interpreter','latex');ylabel('ang vel $[rad/s]$','Interpreter','latex')
+        hold on
+        subplot(2,2,2)
+        plot(time,w_ref(2,1:end), '-','linewidth',2)
+        hold on
+        plot(time,wd_op(2,1:end),'--','linewidth',2)
+        axis([0 time(end) -2 2])
+        legend('Ref ang velocity y', 'Output ang velocity y')
+        xlabel('t [s]');ylabel('ang vel $[rad/s]$','Interpreter','latex')
+        hold on
+        subplot(2,2,3)
+        plot(time,w_ref(3,1:end), '-','linewidth',2)
+        hold on
+        plot(time,wd_op(3,1:end),'--','linewidth',2)
+        axis([0 time(end) -2 2])
+        legend('Ref ang velocity x', 'Output ang velocity x')
+        xlabel('t [s]');ylabel('ang vel $[rad/s]$','Interpreter','latex')
+        
+        % lambda plots
+        figure
+        grid minor
+        hold on
+        subplot(4,4,1)
+        % hold on
+        plot(time,state_sim(1:end,14),'linewidth',2)
+        axis([0 time(end) -2 2])
+        xlabel('t [s]','Interpreter','latex');ylabel('$\lambda_1$','Interpreter','latex')
+        hold on
+        subplot(4,4,2)
+        plot(time,state_sim(1:end,15),'linewidth',2)
+        axis([0 time(end) -2 2])
+        xlabel('t [s]','Interpreter','latex');ylabel('$\lambda_2$','Interpreter','latex')
+        hold on
+        subplot(4,4,3)
+        plot(time,state_sim(1:end,16),'linewidth',2)
+        axis([0 time(end) -2 2])
+        xlabel('t [s]','Interpreter','latex');ylabel('$\lambda_3$','Interpreter','latex')
+        hold on
+        subplot(4,4,4)
+        plot(time,state_sim(1:end,17),'linewidth',2)
+        axis([0 time(end) -2 2])
+        xlabel('t [s]','Interpreter','latex');ylabel('$\lambda_4$','Interpreter','latex')
+        hold on
+        subplot(4,4,5)
+        plot(time,state_sim(1:end,18),'linewidth',2)
+        axis([0 time(end) -2 2])
+        xlabel('t [s]','Interpreter','latex');ylabel('$\lambda_5$','Interpreter','latex')
+        hold on
+        subplot(4,4,6)
+        plot(time,state_sim(1:end,19),'linewidth',2)
+        axis([0 time(end) -2 2])
+        xlabel('t [s]','Interpreter','latex');ylabel('$\lambda_6$','Interpreter','latex')
+        hold on
+        subplot(4,4,7)
+        plot(time,state_sim(1:end,20),'linewidth',2)
+        axis([0 time(end) -2 2])
+        xlabel('t [s]','Interpreter','latex');ylabel('$\lambda_7$','Interpreter','latex')
+        hold on
+        subplot(4,4,8)
+        plot(time,state_sim(1:end,21),'linewidth',2)
+        axis([0 time(end) -2 2])
+        xlabel('t [s]','Interpreter','latex');ylabel('$\lambda_8$','Interpreter','latex')
+        hold on
+        subplot(4,4,9)
+        plot(time,state_sim(1:end,22),'linewidth',2)
+        axis([0 time(end) -2 2])
+        xlabel('t [s]','Interpreter','latex');ylabel('$\lambda_9$','Interpreter','latex')
+        hold on
+        subplot(4,4,10)
+        plot(time,state_sim(1:end,23),'linewidth',2)
+        axis([0 time(end) -2 2])
+        xlabel('t [s]','Interpreter','latex');ylabel('$\lambda_{10}$','Interpreter','latex')
+        hold on
+        subplot(4,4,11)
+        plot(time,state_sim(1:end,24),'linewidth',2)
+        axis([0 time(end) -2 2])
+        xlabel('t [s]','Interpreter','latex');ylabel('$\lambda_{11}$','Interpreter','latex')
+        hold on
+        subplot(4,4,12)
+        plot(time,state_sim(1:end,25),'linewidth',2)
+        axis([0 time(end) -2 2])
+        xlabel('t [s]','Interpreter','latex');ylabel('$\lambda_{12}$','Interpreter','latex')
+        hold on
+        subplot(4,4,13)
+        plot(time,state_sim(1:end,26),'linewidth',2)
+        axis([0 time(end) -2 2])
+        xlabel('t [s]','Interpreter','latex');ylabel('$\lambda_{13}$','Interpreter','latex')
+        hold on
+        subplot(4,4,14)
+        plot(time,state_sim(1:end,27),'linewidth',2)
+        axis([0 time(end) -2 2])
+        xlabel('t [s]','Interpreter','latex');ylabel('$\lambda_{14}$','Interpreter','latex')
+        hold on
+        subplot(4,4,15)
+        plot(time,state_sim(1:end,28),'linewidth',2)
+        axis([0 time(end) -2 2])
+        xlabel('t [s]','Interpreter','latex');ylabel('$\lambda_{15}$','Interpreter','latex')
+        hold on
+        subplot(4,4,16)
+        % plot(t,pd(1:end-1,1),'-','linewidth',2)
+        % hold on
+        plot(time,state_sim(1:end,29),'linewidth',2)
+        axis([0 time(end) -2 2])
+        % legend('Ref velocity x', 'Output velocity x')
+        xlabel('t [s]','Interpreter','latex');ylabel('$\lambda_{16}$','Interpreter','latex')
 
 end

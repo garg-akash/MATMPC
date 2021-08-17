@@ -16,7 +16,8 @@ disp('--------------------------------------------------------------------------
 %% Insert Model here
 addpath([pwd,'/examples']);
 
-settings.model='InvertedPendulum'; % see the folder "examples" for details
+%settings.model='InvertedPendulum'; % see the folder "examples" for details
+settings.model='Object'; 
 
 run(settings.model);
 
@@ -104,7 +105,8 @@ Cui = jacobian(general_con, controls) + SX.zeros(nc, nu);
 CxN = jacobian(general_con_N, states) + SX.zeros(ncN, nx);
 
 obji_fun = Function('obji_fun',{states,controls,params,refs,Q},{obji+SX.zeros(1,1)});
-objN_fun = Function('objN_fun',{states,params,refN,QN},{objN+SX.zeros(1,1)});
+% objN_fun = Function('objN_fun',{states,params,refN,QN},{objN+SX.zeros(1,1)});
+objN_fun = Function('objN_fun',{states,controls,params,refN,QN},{objN+SX.zeros(1,1)});
 
 Hz_fun = Function('Hz_fun',{aux,params,refs,Q},{Hz});
 HzN_fun = Function('HzN_fun',{auxN,params,refN,QN},{HzN});

@@ -38,6 +38,11 @@ else
     error('No setting data is detected!');
 end
 
+if strcmp(settings.model, 'Object')
+    addpath([pwd,'/kinematics']);
+    load_init_params;
+end
+
 Ts = settings.Ts_st;     % Closed-loop sampling time (usually = shooting interval)
 
 Ts_st = settings.Ts_st;  % Shooting interval
@@ -52,7 +57,7 @@ nbx = settings.nbx;  % No. of state bounds
 
 %% solver configurations
 
-N  = 80;             % No. of shooting points
+N  = 40;             % No. of shooting points
 settings.N = N;
 
 N2 = N/5;
@@ -67,7 +72,8 @@ opt.condensing      = 'default_full';  %'default_full','no','blasfeo_full(requir
 opt.qpsolver        = 'qpoases'; 
 opt.hotstart        = 'no'; %'yes','no' (only for qpoases, use 'no' for nonlinear systems)
 opt.shifting        = 'no'; % 'yes','no'
-opt.ref_type        = 0; % 0-time invariant, 1-time varying(no preview), 2-time varying (preview)
+%opt.ref_type        = 0; % 0-time invariant, 1-time varying(no preview), 2-time varying (preview)
+opt.ref_type        = 2;
 opt.nonuniform_grid = 0; % if use non-uniform grid discretization (go to InitMemory.m, line 459 to configure)
 opt.RTI             = 'yes'; % if use Real-time Iteration
 %% available qpsolver
@@ -101,7 +107,7 @@ mem = InitMemory(settings, opt, input);
 %% Simulation (start your simulation...)
 
 mem.iter = 1; time = 0.0;
-Tf = 4;  % simulation time
+Tf = 2.5;  % simulation time
 state_sim= input.x0';
 controls_MPC = input.u0';
 y_sim = [];
@@ -111,7 +117,11 @@ ref_traj = [];
 KKT = [];
 OBJ=[];
 numIT=[];
-
+iter = 1;
+flag_rep = 1;
+M_ = o.Mb;
+C_ = blkdiag(skew(input.x0(10:12))*M_(1),skew(input.x0(10:12))*M_(4:6,4:6));
+N_ = [zyx2R(input.x0(4:6))'*[0;0;M_(1)*9.81];0;0;0];
 while time(end) < Tf
         
     % the reference input.y is a ny by N matrix
@@ -124,6 +134,10 @@ while time(end) < Tf
             input.y = repmat(data.REF(mem.iter,:)',1,N);
             input.yN = data.REF(mem.iter,1:nyN)';
         case 2 %time-varying reference (reference preview)
+            if(mem.iter+N>size(data.REF,1) && flag_rep) %extend last ref for remaining horizons
+                data.REF = [data.REF;repmat(data.REF(end,:),N,1)];
+                flag_rep = 0;
+            end
             input.y = data.REF(mem.iter:mem.iter+N-1,:)';
             input.yN = data.REF(mem.iter+N,1:nyN)';
     end
@@ -175,7 +189,8 @@ while time(end) < Tf
     sim_input.x = state_sim(end,:).';
     sim_input.u = output.u(:,1);
     sim_input.z = input.z(:,1);
-    sim_input.p = input.od(:,1);
+%     sim_input.p = input.od(:,1);
+    sim_input.p = [M_(:);C_(:);N_(:)];
 
     [xf, zf] = Simulate_System(sim_input.x, sim_input.u, sim_input.z, sim_input.p, mem, settings);
     xf = full(xf);
@@ -194,12 +209,16 @@ while time(end) < Tf
     CPT = [CPT; cpt, tshooting, tcond, tqp];
     numIT = [numIT; output.info.iteration_num];
     
+%     M_ = o.Mb;    
+    C_ = blkdiag(skew(xf(10:12))*M_(1),skew(xf(10:12))*M_(4:6,4:6));
+    N_ = [zyx2R(xf(4:6))'*[0;0;M_(1)*9.81];0;0;0];
     % go to the next sampling instant
     nextTime = mem.iter*Ts; 
     mem.iter = mem.iter+1;
     disp(['current time:' num2str(nextTime) '  CPT:' num2str(cpt) 'ms  SHOOTING:' num2str(tshooting) 'ms  COND:' num2str(tcond) 'ms  QP:' num2str(tqp) 'ms  Opt:' num2str(OptCrit) '   OBJ:' num2str(OBJ(end)) '  SQP_IT:' num2str(output.info.iteration_num)]);
 %     disp(['current time:' num2str(nextTime) '  CPT:' num2str(cpt) 'ms  SHOOTING:' num2str(tshooting) 'ms  COND:' num2str(tcond) 'ms  QP:' num2str(tqp) 'ms  Opt:' num2str(OptCrit) '   OBJ:' num2str(OBJ(end)) '  SQP_IT:' num2str(output.info.iteration_num) '  Perc:' num2str(mem.perc)]);   
     time = [time nextTime];   
+    iter = iter + 1;
 end
 
 %%

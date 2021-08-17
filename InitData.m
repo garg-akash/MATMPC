@@ -26,8 +26,8 @@ function [input, data] = InitData(settings)
             QN=[10 10 0.1 0.1]';
 
             % upper and lower bounds for states (=nbx)
-            lb_x = -2;
-            ub_x = 2;
+            lb_x = [-2;-4];
+            ub_x = [2;4];
 
             % upper and lower bounds for controls (=nbu)           
             lb_u = -20;
@@ -39,6 +39,30 @@ function [input, data] = InitData(settings)
             lb_gN = [];
             ub_gN = [];
 
+        case 'Object'
+            load_init_params;
+            input.x0 = [p_ref(1,:)';o_ref(1,:)';pd_ref_s(1,:)';w_ref_s(1:3,1);9.8;0.3*ones(16,1)];    
+            input.u0 = zeros(nu,1); 
+            input.z0 = zeros(nz,1);
+            para0 = [o.Mb(:);zeros(6*6,1);zyx2R(o_ref(1,:))'*[0;0;o.Mb(1)*9.8];0;0;0];   
+
+            Q=repmat([10*ones(1,6) 1e-2*ones(1,6) 0 1e-4*ones(1,16) 1e-4*ones(1,16)]',1,N);
+            QN=[10*ones(1,6) 1e-2*ones(1,6) 0 1e-4*ones(1,16)]';
+
+            % upper and lower bounds for states (=nbx)
+            lb_x = [-2*ones(3,1);-pi;-pi/2;-pi;-2*ones(3,1);-pi*ones(3,1);9.8;zeros(16,1)];
+            ub_x = [2*ones(3,1);pi;pi/2;pi;2*ones(3,1);pi*ones(3,1);9.8;20*ones(16,1)];
+
+            % upper and lower bounds for controls (=nbu)           
+            lb_u = -10000*ones(16,1);
+            ub_u = 10000*ones(16,1);
+                       
+            % upper and lower bounds for general constraints (=nc)
+            lb_g = [];
+            ub_g = [];            
+            lb_gN = [];
+            ub_gN = [];
+            
         case 'ChainofMasses_Lin'
             n=5;
             data.n=n;
@@ -248,8 +272,14 @@ function [input, data] = InitData(settings)
 
         case 'InvertedPendulum'
 
-            data.REF=zeros(1,nx+nu);
+            %data.REF=zeros(1,nx+nu);
+            data.REF=[0,0,0,0,0];
+            
+        case 'Object'
 
+            data.REF=[p_ref,o_ref,pd_ref_s,w_ref_s',9.81*ones(size(p_ref,1),1),0.3*ones(size(p_ref,1),16),zeros(size(p_ref,1),16)];
+            %data.REF=[p_ref(end,:)';o_ref(end,:)';pd_ref_s(end,:)';w_ref_s(1:3,end);9.8;0.3*ones(16,1);zeros(16,1)];
+            
         case 'ChainofMasses_Lin'
 
             data.REF=[7.5,0,0,zeros(1,3*(n-1)),zeros(1,nu)];

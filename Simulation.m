@@ -72,8 +72,7 @@ opt.condensing      = 'default_full';  %'default_full','no','blasfeo_full(requir
 opt.qpsolver        = 'qpoases'; 
 opt.hotstart        = 'no'; %'yes','no' (only for qpoases, use 'no' for nonlinear systems)
 opt.shifting        = 'no'; % 'yes','no'
-%opt.ref_type        = 0; % 0-time invariant, 1-time varying(no preview), 2-time varying (preview)
-opt.ref_type        = 2;
+opt.ref_type        = 2; % 0-time invariant, 1-time varying(no preview), 2-time varying (preview)
 opt.nonuniform_grid = 0; % if use non-uniform grid discretization (go to InitMemory.m, line 459 to configure)
 opt.RTI             = 'yes'; % if use Real-time Iteration
 %% available qpsolver
@@ -119,9 +118,11 @@ OBJ=[];
 numIT=[];
 iter = 1;
 flag_rep = 1;
-M_ = o.Mb;
-C_ = blkdiag(skew(input.x0(10:12))*M_(1),skew(input.x0(10:12))*M_(4:6,4:6));
-N_ = [zyx2R(input.x0(4:6))'*[0;0;M_(1)*9.81];0;0;0];
+if strcmp(settings.model, 'Object')
+    M_ = o.Mb;
+    C_ = blkdiag(skew(input.x0(10:12))*M_(1),skew(input.x0(10:12))*M_(4:6,4:6));
+    N_ = [zyx2R(input.x0(4:6))'*[0;0;M_(1)*9.81];0;0;0];
+end
 while time(end) < Tf
         
     % the reference input.y is a ny by N matrix
@@ -190,7 +191,11 @@ while time(end) < Tf
     sim_input.u = output.u(:,1);
     sim_input.z = input.z(:,1);
 %     sim_input.p = input.od(:,1);
-    sim_input.p = [M_(:);C_(:);N_(:)];
+    if strcmp(settings.model, 'Object')
+        sim_input.p = [M_(:);C_(:);N_(:)];
+    else
+        sim_input.p = input.z(:,1);
+    end
 
     [xf, zf] = Simulate_System(sim_input.x, sim_input.u, sim_input.z, sim_input.p, mem, settings);
     xf = full(xf);
@@ -209,9 +214,11 @@ while time(end) < Tf
     CPT = [CPT; cpt, tshooting, tcond, tqp];
     numIT = [numIT; output.info.iteration_num];
     
-%     M_ = o.Mb;    
-    C_ = blkdiag(skew(xf(10:12))*M_(1),skew(xf(10:12))*M_(4:6,4:6));
-    N_ = [zyx2R(xf(4:6))'*[0;0;M_(1)*9.81];0;0;0];
+    if strcmp(settings.model, 'Object')
+        %     M_ = o.Mb;
+        C_ = blkdiag(skew(xf(10:12))*M_(1),skew(xf(10:12))*M_(4:6,4:6));
+        N_ = [zyx2R(xf(4:6))'*[0;0;M_(1)*9.81];0;0;0];
+    end
     % go to the next sampling instant
     nextTime = mem.iter*Ts; 
     mem.iter = mem.iter+1;
